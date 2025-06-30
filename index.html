@@ -29,23 +29,24 @@
 </head>
 
 <body>
-    <!-- Unsichtbare Zeichenflächen (für jede Würfelseite eine) -->
+    <!-- Unsichtbare Zeichenflächen (für jede Würfelseite eine)
     <canvas id="canvas1" class="drawingCanvas" width="512" height="512" style ="display:none"></canvas>
     <canvas id="canvas2" class="drawingCanvas" width="512" height="512" style ="display:none"></canvas>
     <canvas id="canvas3" class="drawingCanvas" width="512" height="512" style ="display:none"></canvas>
     <canvas id="canvas4" class="drawingCanvas" width="512" height="512" style ="display:none"></canvas>
     <canvas id="canvas5" class="drawingCanvas" width="512" height="512" style ="display:none"></canvas>
     <canvas id="canvas6" class="drawingCanvas" width="512" height="512" style ="display:none"></canvas>
+    -->
 
-    <a-scene embedded arjs="sourceType: webcam;">
+    <a-scene embedded arjs="sourceType: webcam;" asset-test>
         <a-marker preset="hiro">
             <a-entity id="cube" position="0 0.5 0" rotation="0 0 0">
-                <a-plane id="face1" position="0 0 0.5" width="1" height="1" rotation="0 0 0" material="shader: flat; src: #tex1"></a-plane>
-                <a-plane id="face2" position="0 0 -0.5" width="1" height="1" rotation="0 180 0" material="shader: flat; src: #tex2"></a-plane>
-                <a-plane id="face3" position="0.5 0 0" width="1" height="1" rotation="0 -90 0" material="shader: flat; src: #tex3"></a-plane>
-                <a-plane id="face4" position="-0.5 0 0" width="1" height="1" rotation="0 90 0" material="shader: flat; src: #tex4"></a-plane>
-                <a-plane id="face5" position="0 0.5 0" width="1" height="1" rotation="-90 0 0" material="shader: flat; src: #tex5"></a-plane>
-                <a-plane id="face6" position="0 -0.5 0" width="1" height="1" rotation="90 0 0" material="shader: flat; src: #tex6"></a-plane>
+                <a-plane id="face1" position="0 0 0.5" width="1" height="1" rotation="0 0 0" material="src: #tex1; side: double"></a-plane>
+                <a-plane id="face2" position="0 0 -0.5" width="1" height="1" rotation="0 180 0" material="shader: flat; src: #tex2; side: double"></a-plane>
+                <a-plane id="face3" position="0.5 0 0" width="1" height="1" rotation="0 -90 0" color="#FF0000"></a-plane>
+                <a-plane id="face4" position="-0.5 0 0" width="1" height="1" rotation="0 90 0" material="shader: flat; src: #tex4; side: double"></a-plane>
+                <a-plane id="face5" position="0 0.5 0" width="1" height="1" rotation="-90 0 0" material="shader: flat; src: #tex5; side: double"></a-plane>
+                <a-plane id="face6" position="0 -0.5 0" width="1" height="1" rotation="90 0 0" material="shader: flat; src: #tex6; side: double"></a-plane>
             </a-entity>
         </a-marker>
 
@@ -62,6 +63,15 @@
     </a-scene>
 
     <script>
+
+        AFRAME.registerSystem('asset-test', {
+  init: function () {
+    const assets = document.querySelector('a-assets');
+    assets.addEventListener('loaded', () => {
+      console.log('Alle Assets geladen!');
+    });
+  }
+});
     // Setup der Canvas Texturen mit einfacher Farbfüllung
     const canvasIds = ["tex1","tex2","tex3","tex4","tex5","tex6"];
     const colors = ["red","green","blue","yellow","orange","purple"];
