@@ -68,8 +68,37 @@
         document.getElementById("canvas3"),
         document.getElementById("canvas4"),
         document.getElementById("canvas5"),
-        document.getElementById("canvas6")
+        document.getElementById("canvas6"),
+        document.querySelectorAll('canvas.drawingCanvas')
       ];
+
+      // Hilfsfunktion
+function mod(n, m) {
+  return ((n % m) + m) % m;
+}
+
+// Zeige nur den aktiven Canvas an, rest verstecken
+function updateActiveCanvas(rotation) {
+  // Rotation in Grad (ganzzahl)
+  let yRot = Math.round(rotation.y);
+  yRot = mod(yRot, 360);
+
+  let activeIndex = 0; // default Seite 1
+
+  if (yRot >= 315 || yRot < 45) activeIndex = 0; // Seite 1 vorne
+  else if (yRot >= 45 && yRot < 135) activeIndex = 3; // Seite 4 rechts
+  else if (yRot >= 135 && yRot < 225) activeIndex = 1; // Seite 2 hinten
+  else if (yRot >= 225 && yRot < 315) activeIndex = 2; // Seite 3 links
+  else if (xRot > 45 && xRot < 135) activeIndex = 5; // Seite 5 oben
+  else if (xRot < -45 && xRot > -135) activeIndex = 6; //Seite 6 unten
+
+  canvases.forEach((c, i) => {
+    c.style.display = (i === activeIndex) ? 'block' : 'none';
+  });
+}
+
+// Beim Laden erstmal Seite 1 anzeigen
+updateActiveCanvas({x:0,y:0,z:0});
 
       // Alle Textur-Bilder im DOM
       const textureImgs = [
@@ -165,6 +194,40 @@
 
       // Standardmäßig erstes Canvas einblenden
       canvases[0].style.display = "block";
+
+      let isDragging = false;
+let previousX = 0;
+let previousY = 0;
+
+cube.addEventListener('touchstart', (e) => {
+  isDragging = true;
+  previousX = e.touches[0].clientX;
+  previousY = e.touches[0].clientY;
+});
+
+cube.addEventListener('touchmove', (e) => {
+  if (!isDragging) return;
+  const deltaX = e.touches[0].clientX - previousX;
+  const deltaY = e.touches[0].clientY - previousY;
+
+  previousX = e.touches[0].clientX;
+  previousY = e.touches[0].clientY;
+
+  // Aktuelle Rotation holen
+  let rotation = cube.getAttribute('rotation');
+
+  // Rotation anpassen (y und x tauschen evtl je nach Achsen)
+  rotation.y += deltaX * 0.5;  // Geschwindigkeit anpassen
+  rotation.x += deltaY * 0.5;
+
+  cube.setAttribute('rotation', rotation);
+
+  updateActiveCanvas(rotation);
+});
+
+cube.addEventListener('touchend', () => {
+  isDragging = false;
+});
 
     </script>
   </body>
