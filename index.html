@@ -1,215 +1,122 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>AR Cube Painting</title>
-    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
-    <script src="https://cdn.rawgit.com/jeromeetienne/ar.js/2.0.2/aframe/build/aframe-ar.min.js"></script>
-    <style>
-      body, html { margin:0; overflow:hidden; height:100%; }
-      #paintArea {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        height: 33vh;
-        background: #eee;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-      }
-      #canvasContainer {
-        flex-grow: 1;
-      }
-      canvas {
-        border: 1px solid black;
-        touch-action: none;
-        width: 100%;
-        height: 100%;
-      }
-      #buttons {
-        margin-top: 5px;
-        display: flex;
-        justify-content: center;
-        gap: 10px;
-      }
-      button {
-        padding: 8px 12px;
-        font-size: 16px;
-      }
-    </style>
-  </head>
-  <body>
-    <a-scene embedded arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled:false;" vr-mode-ui="enabled: false">
-      <!-- Hiro marker -->
-      <a-marker preset="hiro">
-        <a-entity id="rotatingCube" rotation="0 0 0" position="0 0.5 0">
-          <a-box id="cube" position="0 0 0" rotation="0 0 0" scale="1 1 1" color="#4CC3D9" animation="property: rotation; to: 0 360 0; loop: true; dur: 8000;"></a-box>
-        </a-entity>
-      </a-marker>
-      <a-entity camera></a-entity>
-    </a-scene>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>AR Würfel mit Hiro Marker</title>
+  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+  <script src="https://cdn.rawgit.com/jeromeetienne/ar.js/1.7.7/aframe/build/aframe-ar.min.js"></script>
+  <style>
+    #throwButton {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 10px 20px;
+      font-size: 18px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      z-index: 9999;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body style="margin:0; overflow:hidden;">
+  <button id="throwButton">Würfeln</button>
 
-    <div id="paintArea">
-      <div id="canvasContainer">
-        <canvas id="paintCanvas" width="512" height="512"></canvas>
-      </div>
-      <div id="buttons">
-        <button data-face="0">Front</button>
-        <button data-face="1">Back</button>
-        <button data-face="2">Left</button>
-        <button data-face="3">Right</button>
-        <button data-face="4">Top</button>
-        <button data-face="5">Bottom</button>
-      </div>
-    </div>
+  <a-scene
+    embedded
+    arjs="sourceType: webcam; debugUIEnabled: false;"
+    vr-mode-ui="enabled: false"
+  >
+    <!-- Kamera -->
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-    <script>
-      const paintCanvas = document.getElementById('paintCanvas');
-      const ctx = paintCanvas.getContext('2d');
+    <!-- Hiro Marker -->
+    <a-marker type="pattern" url="https://raw.githubusercontent.com/AR-js-org/AR.js/master/three.js/examples/marker-training/examples/pattern-files/pattern-hiro.patt">
 
-      // For touch/mouse painting
-      let drawing = false;
-      let lastX, lastY;
+      <!-- Würfel -->
+      <a-box id="dice" position="0 0.5 0" rotation="0 0 0" depth="0.5" height="0.5" width="0.5" color="#FF0000" material="opacity: 0.8;">
+        <!-- Seitenzahlen als Text-Entities (optional) -->
+        <a-text value="1" position="0 0.3 0.26" rotation="0 0 0" align="center" color="white"></a-text>
+        <a-text value="6" position="0 -0.3 -0.26" rotation="0 180 0" align="center" color="white"></a-text>
+        <a-text value="2" position="0.26 0 0" rotation="0 90 0" align="center" color="white"></a-text>
+        <a-text value="5" position="-0.26 0 0" rotation="0 -90 0" align="center" color="white"></a-text>
+        <a-text value="3" position="0 0.26 0" rotation="90 0 0" align="center" color="white"></a-text>
+        <a-text value="4" position="0 -0.26 0" rotation="-90 0 0" align="center" color="white"></a-text>
+      </a-box>
 
-      paintCanvas.addEventListener('mousedown', startDrawing);
-      paintCanvas.addEventListener('touchstart', startDrawing);
+    </a-marker>
+    <a-entity camera></a-entity>
+  </a-scene>
 
-      paintCanvas.addEventListener('mousemove', draw);
-      paintCanvas.addEventListener('touchmove', draw);
+  <script>
+    const dice = document.querySelector('#dice');
+    const button = document.querySelector('#throwButton');
 
-      paintCanvas.addEventListener('mouseup', stopDrawing);
-      paintCanvas.addEventListener('mouseleave', stopDrawing);
-      paintCanvas.addEventListener('touchend', stopDrawing);
-      paintCanvas.addEventListener('touchcancel', stopDrawing);
+    // Würfelseiten in Euler-Rotation, damit die entsprechende Seite oben liegt
+    // Diese Rotationen sind grob angepasst:
+    const diceSides = [
+      { name: "1", rotation: { x: 0, y: 0, z: 0 } },
+      { name: "2", rotation: { x: 0, y: -90, z: 0 } },
+      { name: "3", rotation: { x: 90, y: 0, z: 0 } },
+      { name: "4", rotation: { x: -90, y: 0, z: 0 } },
+      { name: "5", rotation: { x: 0, y: 90, z: 0 } },
+      { name: "6", rotation: { x: 180, y: 0, z: 0 } },
+    ];
 
-      function getPointerPos(e) {
-        const rect = paintCanvas.getBoundingClientRect();
-        let clientX, clientY;
-        if (e.touches && e.touches.length > 0) {
-          clientX = e.touches[0].clientX;
-          clientY = e.touches[0].clientY;
-        } else {
-          clientX = e.clientX;
-          clientY = e.clientY;
-        }
-        return {
-          x: (clientX - rect.left) * (paintCanvas.width / rect.width),
-          y: (clientY - rect.top) * (paintCanvas.height / rect.height)
-        };
-      }
+    let isThrowing = false;
 
-      function startDrawing(e) {
-        e.preventDefault();
-        drawing = true;
-        const pos = getPointerPos(e);
-        lastX = pos.x;
-        lastY = pos.y;
-      }
+    function animateThrow(targetRotation, duration = 1500) {
+      return new Promise((resolve) => {
+        let startTime = null;
 
-      function draw(e) {
-        if (!drawing) return;
-        e.preventDefault();
-        const pos = getPointerPos(e);
-        ctx.strokeStyle = 'black';
-        ctx.lineWidth = 5;
-        ctx.lineCap = 'round';
+        const initialRotation = dice.getAttribute('rotation');
+        // Animation mit requestAnimationFrame
+        function animate(time) {
+          if (!startTime) startTime = time;
+          let elapsed = time - startTime;
+          let t = Math.min(elapsed / duration, 1); // progress 0..1
 
-        ctx.beginPath();
-        ctx.moveTo(lastX, lastY);
-        ctx.lineTo(pos.x, pos.y);
-        ctx.stroke();
+          // Leicht beschleunigt mit ease out (quadratisch)
+          const easeOutT = 1 - (1 - t) * (1 - t);
 
-        lastX = pos.x;
-        lastY = pos.y;
+          // Interpolieren der Rotation
+          const newRot = {
+            x: initialRotation.x + (targetRotation.x - initialRotation.x) * easeOutT + 720 * easeOutT, // 2 volle Umdrehungen x-Achse
+            y: initialRotation.y + (targetRotation.y - initialRotation.y) * easeOutT + 720 * easeOutT, // 2 volle Umdrehungen y-Achse
+            z: initialRotation.z + (targetRotation.z - initialRotation.z) * easeOutT + 720 * easeOutT, // 2 volle Umdrehungen z-Achse
+          };
+          dice.setAttribute('rotation', newRot);
 
-        updateTexture(currentFace);
-      }
-
-      function stopDrawing(e) {
-        e.preventDefault();
-        drawing = false;
-      }
-
-      // Setup 6 canvases for each face of the cube
-      const faceCanvases = [];
-      const faceContexts = [];
-      for (let i = 0; i < 6; i++) {
-        const c = document.createElement('canvas');
-        c.width = 512;
-        c.height = 512;
-        const cx = c.getContext('2d');
-        cx.fillStyle = '#ffffff';
-        cx.fillRect(0, 0, c.width, c.height);
-        faceCanvases.push(c);
-        faceContexts.push(cx);
-      }
-
-      // Current face index (0 = front, 1 = back, 2 = left, 3 = right, 4 = top, 5 = bottom)
-      let currentFace = 0;
-
-      // Buttons to switch faces
-      document.querySelectorAll('#buttons button').forEach(btn => {
-        btn.addEventListener('click', () => {
-          switchFace(parseInt(btn.dataset.face));
-        });
-      });
-
-      // Set initial paint canvas to front face canvas
-      function switchFace(face) {
-        currentFace = face;
-        // Copy that face's offscreen canvas to paintCanvas for editing
-        ctx.clearRect(0, 0, paintCanvas.width, paintCanvas.height);
-        ctx.drawImage(faceCanvases[face], 0, 0);
-      }
-
-      switchFace(0); // start with front
-
-      // Update the cube's texture for a specific face
-      const cube = document.getElementById('cube');
-
-      // Create six A-Frame textures from the canvases
-      const materials = [];
-
-      // A-Frame expects a material with a map — we use six different materials, one per face
-      // A box can take an array of materials in the 'material' component
-
-      // Make a texture for each face
-      function createMaterialFromCanvas(canvas) {
-        const texture = new THREE.CanvasTexture(canvas);
-        return new THREE.MeshBasicMaterial({ map: texture });
-      }
-
-      // We'll update materials on each render to update textures dynamically
-      function updateMaterials() {
-        for (let i = 0; i < 6; i++) {
-          if (!materials[i]) {
-            materials[i] = createMaterialFromCanvas(faceCanvases[i]);
+          if (t < 1) {
+            requestAnimationFrame(animate);
+          } else {
+            // Am Ende exakte Zielrotation setzen (ohne die 720 Grad extra)
+            dice.setAttribute('rotation', targetRotation);
+            resolve();
           }
-          materials[i].map.needsUpdate = true;
         }
-        cube.getObject3D('mesh').material = materials;
-      }
-
-      // Update the currently painting face texture after drawing
-      function updateTexture(face) {
-        materials[face].map.needsUpdate = true;
-      }
-
-      // On scene loaded
-      document.querySelector('a-scene').addEventListener('loaded', () => {
-        // Set the cube to use the six materials
-        updateMaterials();
-
-        // Add rotation animation to the cube entity
-        const cubeEntity = document.getElementById('rotatingCube');
-        cubeEntity.setAttribute('animation', {
-          property: 'rotation',
-          to: '0 360 0',
-          loop: true,
-          dur: 8000,
-          easing: 'linear'
-        });
+        requestAnimationFrame(animate);
       });
-    </script>
-  </body>
+    }
+
+    button.addEventListener('click', async () => {
+      if (isThrowing) return; // blockieren, falls schon animiert
+      isThrowing = true;
+
+      // Zufällige Seite auswählen
+      const randomIndex = Math.floor(Math.random() * diceSides.length);
+      const side = diceSides[randomIndex];
+
+      // Würfeln animieren
+      await animateThrow(side.rotation);
+
+      alert(`Gewürfelt: ${side.name}`);
+
+      isThrowing = false;
+    });
+  </script>
+</body>
 </html>
