@@ -10,7 +10,6 @@
         margin: 0; padding: 0; overflow: hidden; height: 100%;
         font-family: sans-serif;
       }
-      /* Canvas unten, ca. 1/3 Höhe, fullscreen Breite */
       canvas.drawingCanvas {
         position: fixed;
         bottom: 0;
@@ -20,13 +19,12 @@
         touch-action: none;
         background: #fff;
         border-top: 2px solid #333;
-        display: none; /* nur aktiv anzeigen */
+        display: none;
       }
     </style>
   </head>
   <body>
 
-    <!-- 6 versteckte Canvas, Originalgröße 512x512 -->
     <canvas id="canvas1" class="drawingCanvas" width="512" height="512"></canvas>
     <canvas id="canvas2" class="drawingCanvas" width="512" height="512"></canvas>
     <canvas id="canvas3" class="drawingCanvas" width="512" height="512"></canvas>
@@ -34,10 +32,9 @@
     <canvas id="canvas5" class="drawingCanvas" width="512" height="512"></canvas>
     <canvas id="canvas6" class="drawingCanvas" width="512" height="512"></canvas>
 
-    <a-scene embedded arjs="sourceType: webcam;">
-      <a-marker preset="hiro">
-        <a-entity id="cube" position="0 0.5 0" rotation="0 0 0">
-          <!-- 6 Seiten -->
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
+      <a-marker preset="hiro" id="marker">
+        <a-entity id="cube" position="0 0.5 0" rotation="0 0 0" visible="true" scale="1 1 1">
           <a-plane position="0 0 0.5" width="1" height="1" rotation="0 0 0" material="shader: flat; src: #tex1; side: double"></a-plane>
           <a-plane position="0 0 -0.5" width="1" height="1" rotation="0 180 0" material="shader: flat; src: #tex2; side: double"></a-plane>
           <a-plane position="0.5 0 0" width="1" height="1" rotation="0 -90 0" material="shader: flat; src: #tex3; side: double"></a-plane>
@@ -60,7 +57,6 @@
     </a-scene>
 
     <script>
-      // Alle 6 Canvas und Bilder
       const canvases = [
         document.getElementById("canvas1"),
         document.getElementById("canvas2"),
@@ -81,10 +77,7 @@
 
       const cube = document.getElementById("cube");
 
-      // Aktiver Canvas-Index
-      let activeCanvasIndex = 0;
-
-      // Initial Texturen mit weiß füllen & schwarze Zahl drauf
+      // Start: weiße Fläche mit Nummer
       canvases.forEach((canvas, i) => {
         const ctx = canvas.getContext("2d");
         ctx.fillStyle = "white";
@@ -94,11 +87,11 @@
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillText(i + 1, canvas.width / 2, canvas.height / 2);
-        // Update Bildquelle
         texImgs[i].src = canvas.toDataURL();
       });
 
-      // Nur aktiven Canvas anzeigen
+      let activeCanvasIndex = 0;
+
       function showActiveCanvas(index) {
         canvases.forEach((c, i) => {
           c.style.display = i === index ? "block" : "none";
@@ -108,7 +101,7 @@
 
       showActiveCanvas(0);
 
-      // Touch-Mal-Funktion auf aktivem Canvas
+      // Mal-Logik
       let drawing = false;
       let lastPos = null;
 
@@ -144,7 +137,6 @@
         ctx.lineTo(pos.x, pos.y);
         ctx.stroke();
         lastPos = pos;
-        // Update Textur des Würfels
         texImgs[activeCanvasIndex].src = canvases[activeCanvasIndex].toDataURL();
       }
       function stopDrawing() {
@@ -187,6 +179,9 @@
         rotation.x += deltaY * 0.5;
         rotation.y += deltaX * 0.5;
 
+        // Begrenze X-Rotation zwischen -90 und 90 Grad (optional)
+        rotation.x = Math.min(Math.max(rotation.x, -90), 90);
+
         cube.setAttribute("rotation", `${rotation.x} ${rotation.y} 0`);
 
         updateActiveCanvasFromRotation();
@@ -197,28 +192,17 @@
         isDragging = false;
       });
 
-      // Funktion, die anhand der Rotation bestimmt, welche Seite oben (aktuell) ist,
-      // und entsprechend den passenden Canvas aktiviert.
+      // Seite bestimmen anhand Rotation
       function updateActiveCanvasFromRotation() {
-        // Normiere Winkel auf 0-360
         const rotX = ((rotation.x % 360) + 360) % 360;
         const rotY = ((rotation.y % 360) + 360) % 360;
 
-        // Grobe Heuristik:
-        // Wir nehmen Y-Rotation für die 4 Seiten (front, back, right, left)
-        // und X-Rotation für oben/unten
-
-        // Entscheide Vorderseite (index 0) bei y ~ 0°, rechts (2) bei y ~ 270°, links (3) bei y ~ 90°, hinten (1) bei y ~ 180°
-        // oben (4) wenn rotX zwischen 45° und 135°, unten (5) wenn rotX zwischen 225° und 315°
-
         let index;
-
         if (rotX > 45 && rotX < 135) {
           index = 4; // oben
         } else if (rotX > 225 && rotX < 315) {
           index = 5; // unten
         } else {
-          // Y-Achse Seiten
           if (rotY < 45 || rotY > 315) index = 0; // vorne
           else if (rotY >= 45 && rotY < 135) index = 3; // links
           else if (rotY >= 135 && rotY < 225) index = 1; // hinten
@@ -230,13 +214,14 @@
         }
       }
 
-      // AR Marker detected => Zeige Würfel und aktiven Canvas
-      document.querySelector('a-marker').addEventListener('markerFound', () => {
+      // Marker gefunden => Canvas zeigen
+      document.getElementById("marker").addEventListener("markerFound", () => {
         showActiveCanvas(activeCanvasIndex);
       });
 
-      // Optional: einmal Update auf Start (für Fall Würfel schon sichtbar)
+      // Erstes Update bei Start
       updateActiveCanvasFromRotation();
+
     </script>
   </body>
 </html>
