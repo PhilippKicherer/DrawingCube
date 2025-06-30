@@ -1,144 +1,171 @@
 <!DOCTYPE html>
 <html>
-
-<head>
+  <head>
     <meta charset="utf-8" />
     <title>AR Canvas Cube</title>
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar.min.js"></script>
     <style>
-        body, html {
-      margin: 0; padding: 0; overflow: hidden; height: 100%;
-      font-family: sans-serif;
-    }
-    #info {
-      position: fixed;
-      top: 10px; left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0,0,0,0.5);
-      color: white;
-      padding: 8px 15px;
-      border-radius: 5px;
-      font-size: 18px;
-      pointer-events: none;
-      user-select: none;
-      z-index: 10;
-      display: none;
-    }
+      body {
+        margin: 0;
+        overflow: hidden;
+      }
+      canvas.drawingCanvas {
+        display: none;
+      }
     </style>
-</head>
+  </head>
+  <body>
+    <!-- Unsichtbare Zeichenflächen (für jede Würfelseite eine) -->
+    <canvas id="canvas1" class="drawingCanvas" width="512" height="512"></canvas>
+    <canvas id="canvas2" class="drawingCanvas" width="512" height="512"></canvas>
+    <canvas id="canvas3" class="drawingCanvas" width="512" height="512"></canvas>
+    <canvas id="canvas4" class="drawingCanvas" width="512" height="512"></canvas>
+    <canvas id="canvas5" class="drawingCanvas" width="512" height="512"></canvas>
+    <canvas id="canvas6" class="drawingCanvas" width="512" height="512"></canvas>
 
-<body>
-    <!-- Unsichtbare Zeichenflächen (für jede Würfelseite eine)
-    <canvas id="canvas1" class="drawingCanvas" width="512" height="512" style ="display:none"></canvas>
-    <canvas id="canvas2" class="drawingCanvas" width="512" height="512" style ="display:none"></canvas>
-    <canvas id="canvas3" class="drawingCanvas" width="512" height="512" style ="display:none"></canvas>
-    <canvas id="canvas4" class="drawingCanvas" width="512" height="512" style ="display:none"></canvas>
-    <canvas id="canvas5" class="drawingCanvas" width="512" height="512" style ="display:none"></canvas>
-    <canvas id="canvas6" class="drawingCanvas" width="512" height="512" style ="display:none"></canvas>
-    -->
+    <a-scene embedded arjs="sourceType: webcam;">
+      <a-marker preset="hiro">
+        <a-entity id="cube" position="0 0.5 0" rotation="0 0 0">
+          <!-- Vorderseite -->
+          <a-plane id="face1" position="0 0 0.5" width="1" height="1" rotation="0 0 0"
+                   material="shader: flat; src: #tex1; side:double"></a-plane>
+          <!-- Rückseite -->
+          <a-plane id="face2" position="0 0 -0.5" width="1" height="1" rotation="0 180 0"
+                   material="shader: flat; src: #tex2; side:double"></a-plane>
+          <!-- Rechte Seite -->
+          <a-plane id="face3" position="0.5 0 0" width="1" height="1" rotation="0 -90 0"
+                   material="shader: flat; src: #tex3; side:double"></a-plane>
+          <!-- Linke Seite -->
+          <a-plane id="face4" position="-0.5 0 0" width="1" height="1" rotation="0 90 0"
+                   material="shader: flat; src: #tex4; side:double"></a-plane>
+          <!-- Oben -->
+          <a-plane id="face5" position="0 0.5 0" width="1" height="1" rotation="-90 0 0"
+                   material="shader: flat; src: #tex5; side:double"></a-plane>
+          <!-- Unten -->
+          <a-plane id="face6" position="0 -0.5 0" width="1" height="1" rotation="90 0 0"
+                   material="shader: flat; src: #tex6; side:double"></a-plane>
+        </a-entity>
+      </a-marker>
 
-    <a-scene embedded arjs="sourceType: webcam;" asset-test>
-        <a-marker preset="hiro">
-            <a-entity id="cube" position="0 0.5 0" rotation="0 0 0">
-                <a-plane id="face1" position="0 0 0.5" width="1" height="1" rotation="0 0 0" material="src: #tex1; side: double"></a-plane>
-                <a-plane id="face2" position="0 0 -0.5" width="1" height="1" rotation="0 180 0" material="shader: flat; src: #tex2; side: double"></a-plane>
-                <a-plane id="face3" position="0.5 0 0" width="1" height="1" rotation="0 -90 0" color="#FF0000"></a-plane>
-                <a-plane id="face4" position="-0.5 0 0" width="1" height="1" rotation="0 90 0" material="shader: flat; src: #tex4; side: double"></a-plane>
-                <a-plane id="face5" position="0 0.5 0" width="1" height="1" rotation="-90 0 0" material="shader: flat; src: #tex5; side: double"></a-plane>
-                <a-plane id="face6" position="0 -0.5 0" width="1" height="1" rotation="90 0 0" material="shader: flat; src: #tex6; side: double"></a-plane>
-            </a-entity>
-        </a-marker>
+      <a-assets>
+        <img id="tex1" src="" />
+        <img id="tex2" src="" />
+        <img id="tex3" src="" />
+        <img id="tex4" src="" />
+        <img id="tex5" src="" />
+        <img id="tex6" src="" />
+      </a-assets>
 
-        <a-assets>
-            <img id="tex1" width="512" height="512" src="1.PNG" />
-            <img id="tex2" width="512" height="512" src="6.PNG" />
-            <img id="tex3" width="512" height="512" src="2.PNG" />
-            <img id="tex4" width="512" height="512" src="5.PNG" />
-            <img id="tex5" width="512" height="512" src="3.PNG" />
-            <img id="tex6" width="512" height="512" src="4.PNG" />
-        </a-assets>
-
-        <a-entity camera></a-entity>
+      <a-entity camera></a-entity>
     </a-scene>
 
     <script>
-
-        AFRAME.registerSystem('asset-test', {
-  init: function () {
-    const assets = document.querySelector('a-assets');
-    assets.addEventListener('loaded', () => {
-      console.log('Alle Assets geladen!');
-    });
-  }
-});
-    // Setup der Canvas Texturen mit einfacher Farbfüllung
-    const canvasIds = ["tex1","tex2","tex3","tex4","tex5","tex6"];
-    const colors = ["red","green","blue","yellow","orange","purple"];
-    canvasIds.forEach((id,i) => {
-      const c = document.getElementById(id);
-      const ctx = c.getContext("2d");
-      ctx.fillStyle = colors[i];
-      ctx.fillRect(0,0,c.width,c.height);
-      ctx.fillStyle = "white";
-      ctx.font = "bold 120px sans-serif";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(i+1, c.width/2, c.height/2);
-    });
-
-    const cube = document.getElementById("cube");
-    const info = document.getElementById("info");
-
-    // Rotation Startwert
-    let rotationX = 0;
-    let rotationY = 0;
-
-    function showFeedback() {
-      info.style.display = "block";
-      setTimeout(() => info.style.display = "none", 1500);
-    }
-
-    function rollCube() {
-      // Zufällige Seite von 1 bis 6
-      const side = Math.floor(Math.random() * 6);
-      // Drehungen, damit die Seite oben ist
-      const rotations = [
-        {x: 0, y: 0},     // Seite 1 (Vorne)
-        {x: 0, y: 180},   // Seite 2 (Hinten)
-        {x: 0, y: -90},   // Seite 3 (Links)
-        {x: 0, y: 90},    // Seite 4 (Rechts)
-        {x: -90, y: 0},   // Seite 5 (Oben)
-        {x: 90, y: 0}     // Seite 6 (Unten)
+      // Alle 6 Zeichen-Canvas
+      const canvases = [
+        document.getElementById("canvas1"),
+        document.getElementById("canvas2"),
+        document.getElementById("canvas3"),
+        document.getElementById("canvas4"),
+        document.getElementById("canvas5"),
+        document.getElementById("canvas6")
       ];
-      const r = rotations[side];
 
-      // Animation mit A-Frame (setAttribute + animation)
-      cube.setAttribute('animation__roll', {
-        property: 'rotation',
-        to: `${r.x} ${r.y} 0`,
-        dur: 1000,
-        easing: 'easeOutElastic'
+      // Alle Textur-Bilder im DOM
+      const textureImgs = [
+        document.getElementById("tex1"),
+        document.getElementById("tex2"),
+        document.getElementById("tex3"),
+        document.getElementById("tex4"),
+        document.getElementById("tex5"),
+        document.getElementById("tex6")
+      ];
+
+      // Würfel-Entity
+      const cube = document.getElementById("cube");
+
+      // Start-Rotation
+      let rotationY = 0;
+
+      // Initialisieren & Texturen laden
+      canvases.forEach((canvas, i) => {
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = "#000000";
+        ctx.lineWidth = 4;
+
+        // Zeichnen ermöglichen
+        let drawing = false;
+
+        const getPos = (e) => {
+          const rect = canvas.getBoundingClientRect();
+          if (e.touches) {
+            return {
+              x: e.touches[0].clientX - rect.left,
+              y: e.touches[0].clientY - rect.top
+            };
+          } else {
+            return {
+              x: e.clientX - rect.left,
+              y: e.clientY - rect.top
+            };
+          }
+        };
+
+        const updateTexture = () => {
+          textureImgs[i].src = canvas.toDataURL();
+        };
+
+        canvas.addEventListener("mousedown", (e) => {
+          drawing = true;
+          const pos = getPos(e);
+          ctx.beginPath();
+          ctx.moveTo(pos.x, pos.y);
+        });
+
+        canvas.addEventListener("mousemove", (e) => {
+          if (!drawing) return;
+          const pos = getPos(e);
+          ctx.lineTo(pos.x, pos.y);
+          ctx.stroke();
+          updateTexture();
+        });
+
+        canvas.addEventListener("mouseup", () => (drawing = false));
+        canvas.addEventListener("mouseleave", () => (drawing = false));
+        canvas.addEventListener("touchstart", (e) => {
+          drawing = true;
+          const pos = getPos(e);
+          ctx.beginPath();
+          ctx.moveTo(pos.x, pos.y);
+        });
+        canvas.addEventListener("touchmove", (e) => {
+          if (!drawing) return;
+          const pos = getPos(e);
+          ctx.lineTo(pos.x, pos.y);
+          ctx.stroke();
+          updateTexture();
+        });
+        canvas.addEventListener("touchend", () => (drawing = false));
+
+        // Erstes Laden
+        updateTexture();
       });
 
-      showFeedback();
-      console.log("Würfel zeigt Seite:", side + 1);
-    }
+      // Pfeiltasten-Steuerung für Rotation
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowLeft") {
+          rotationY -= 90;
+        } else if (e.key === "ArrowRight") {
+          rotationY += 90;
+        }
+        cube.setAttribute("rotation", `0 ${rotationY} 0`);
+      });
 
-    // Shake-Event mit DeviceMotion
-    let lastShake = 0;
-    window.addEventListener("devicemotion", event => {
-      const acc = event.accelerationIncludingGravity;
-      if(!acc) return;
-      const accMagnitude = Math.sqrt(acc.x*acc.x + acc.y*acc.y + acc.z*acc.z);
-      const now = Date.now();
+      // Standardmäßig erstes Canvas einblenden
+      canvases[0].style.display = "block";
 
-      if(accMagnitude > 10 && now - lastShake > 1500){
-        lastShake = now;
-        rollCube();
-      }
-    });
-
-  </script>
-</body>
+    </script>
+  </body>
 </html>
