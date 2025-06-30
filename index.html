@@ -2,21 +2,31 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>AR Canvas Cube</title>
+    <title>AR Canvas Cube mit Touch-Drehung & Malfläche</title>
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar.min.js"></script>
     <style>
-      body {
-        margin: 0;
-        overflow: hidden;
+      body, html {
+        margin: 0; padding: 0; overflow: hidden; height: 100%;
+        font-family: sans-serif;
       }
+      /* Canvas unten, ca. 1/3 Höhe, fullscreen Breite */
       canvas.drawingCanvas {
-        display: none;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100vw;
+        height: 33vh;
+        touch-action: none;
+        background: #fff;
+        border-top: 2px solid #333;
+        display: none; /* nur aktiv anzeigen */
       }
     </style>
   </head>
   <body>
-    <!-- Unsichtbare Zeichenflächen (für jede Würfelseite eine) -->
+
+    <!-- 6 versteckte Canvas, Originalgröße 512x512 -->
     <canvas id="canvas1" class="drawingCanvas" width="512" height="512"></canvas>
     <canvas id="canvas2" class="drawingCanvas" width="512" height="512"></canvas>
     <canvas id="canvas3" class="drawingCanvas" width="512" height="512"></canvas>
@@ -27,41 +37,30 @@
     <a-scene embedded arjs="sourceType: webcam;">
       <a-marker preset="hiro">
         <a-entity id="cube" position="0 0.5 0" rotation="0 0 0">
-          <!-- Vorderseite -->
-          <a-plane id="face1" position="0 0 0.5" width="1" height="1" rotation="0 0 0"
-                   material="shader: flat; src: #tex1; side:double"></a-plane>
-          <!-- Rückseite -->
-          <a-plane id="face2" position="0 0 -0.5" width="1" height="1" rotation="0 180 0"
-                   material="shader: flat; src: #tex2; side:double"></a-plane>
-          <!-- Rechte Seite -->
-          <a-plane id="face3" position="0.5 0 0" width="1" height="1" rotation="0 -90 0"
-                   material="shader: flat; src: #tex3; side:double"></a-plane>
-          <!-- Linke Seite -->
-          <a-plane id="face4" position="-0.5 0 0" width="1" height="1" rotation="0 90 0"
-                   material="shader: flat; src: #tex4; side:double"></a-plane>
-          <!-- Oben -->
-          <a-plane id="face5" position="0 0.5 0" width="1" height="1" rotation="-90 0 0"
-                   material="shader: flat; src: #tex5; side:double"></a-plane>
-          <!-- Unten -->
-          <a-plane id="face6" position="0 -0.5 0" width="1" height="1" rotation="90 0 0"
-                   material="shader: flat; src: #tex6; side:double"></a-plane>
+          <!-- 6 Seiten -->
+          <a-plane position="0 0 0.5" width="1" height="1" rotation="0 0 0" material="shader: flat; src: #tex1; side: double"></a-plane>
+          <a-plane position="0 0 -0.5" width="1" height="1" rotation="0 180 0" material="shader: flat; src: #tex2; side: double"></a-plane>
+          <a-plane position="0.5 0 0" width="1" height="1" rotation="0 -90 0" material="shader: flat; src: #tex3; side: double"></a-plane>
+          <a-plane position="-0.5 0 0" width="1" height="1" rotation="0 90 0" material="shader: flat; src: #tex4; side: double"></a-plane>
+          <a-plane position="0 0.5 0" width="1" height="1" rotation="-90 0 0" material="shader: flat; src: #tex5; side: double"></a-plane>
+          <a-plane position="0 -0.5 0" width="1" height="1" rotation="90 0 0" material="shader: flat; src: #tex6; side: double"></a-plane>
         </a-entity>
       </a-marker>
 
       <a-assets>
-        <img id="tex1" src="" />
-        <img id="tex2" src="" />
-        <img id="tex3" src="" />
-        <img id="tex4" src="" />
-        <img id="tex5" src="" />
-        <img id="tex6" src="" />
+        <img id="tex1" />
+        <img id="tex2" />
+        <img id="tex3" />
+        <img id="tex4" />
+        <img id="tex5" />
+        <img id="tex6" />
       </a-assets>
 
       <a-entity camera></a-entity>
     </a-scene>
 
     <script>
-      // Alle 6 Zeichen-Canvas
+      // Alle 6 Canvas und Bilder
       const canvases = [
         document.getElementById("canvas1"),
         document.getElementById("canvas2"),
@@ -69,166 +68,175 @@
         document.getElementById("canvas4"),
         document.getElementById("canvas5"),
         document.getElementById("canvas6"),
-        document.querySelectorAll('canvas.drawingCanvas')
       ];
 
-      // Hilfsfunktion
-function mod(n, m) {
-  return ((n % m) + m) % m;
-}
-
-// Zeige nur den aktiven Canvas an, rest verstecken
-function updateActiveCanvas(rotation) {
-  // Rotation in Grad (ganzzahl)
-  let yRot = Math.round(rotation.y);
-  yRot = mod(yRot, 360);
-
-  let activeIndex = 0; // default Seite 1
-
-  if (yRot >= 315 || yRot < 45) activeIndex = 0; // Seite 1 vorne
-  else if (yRot >= 45 && yRot < 135) activeIndex = 3; // Seite 4 rechts
-  else if (yRot >= 135 && yRot < 225) activeIndex = 1; // Seite 2 hinten
-  else if (yRot >= 225 && yRot < 315) activeIndex = 2; // Seite 3 links
-  else if (xRot > 45 && xRot < 135) activeIndex = 5; // Seite 5 oben
-  else if (xRot < -45 && xRot > -135) activeIndex = 6; //Seite 6 unten
-
-  canvases.forEach((c, i) => {
-    c.style.display = (i === activeIndex) ? 'block' : 'none';
-  });
-}
-
-// Beim Laden erstmal Seite 1 anzeigen
-updateActiveCanvas({x:0,y:0,z:0});
-
-      // Alle Textur-Bilder im DOM
-      const textureImgs = [
+      const texImgs = [
         document.getElementById("tex1"),
         document.getElementById("tex2"),
         document.getElementById("tex3"),
         document.getElementById("tex4"),
         document.getElementById("tex5"),
-        document.getElementById("tex6")
+        document.getElementById("tex6"),
       ];
 
-      // Würfel-Entity
       const cube = document.getElementById("cube");
 
-      // Start-Rotation
-      let rotationY = 0;
+      // Aktiver Canvas-Index
+      let activeCanvasIndex = 0;
 
-      // Initialisieren & Texturen laden
+      // Initial Texturen mit weiß füllen & schwarze Zahl drauf
       canvases.forEach((canvas, i) => {
         const ctx = canvas.getContext("2d");
-        ctx.fillStyle = "#ffffff";
+        ctx.fillStyle = "white";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.strokeStyle = "#000000";
-        ctx.lineWidth = 4;
-
-        // Zeichnen ermöglichen
-        let drawing = false;
-
-        const getPos = (e) => {
-          const rect = canvas.getBoundingClientRect();
-          if (e.touches) {
-            return {
-              x: e.touches[0].clientX - rect.left,
-              y: e.touches[0].clientY - rect.top
-            };
-          } else {
-            return {
-              x: e.clientX - rect.left,
-              y: e.clientY - rect.top
-            };
-          }
-        };
-
-        const updateTexture = () => {
-          textureImgs[i].src = canvas.toDataURL();
-        };
-
-        canvas.addEventListener("mousedown", (e) => {
-          drawing = true;
-          const pos = getPos(e);
-          ctx.beginPath();
-          ctx.moveTo(pos.x, pos.y);
-        });
-
-        canvas.addEventListener("mousemove", (e) => {
-          if (!drawing) return;
-          const pos = getPos(e);
-          ctx.lineTo(pos.x, pos.y);
-          ctx.stroke();
-          updateTexture();
-        });
-
-        canvas.addEventListener("mouseup", () => (drawing = false));
-        canvas.addEventListener("mouseleave", () => (drawing = false));
-        canvas.addEventListener("touchstart", (e) => {
-          drawing = true;
-          const pos = getPos(e);
-          ctx.beginPath();
-          ctx.moveTo(pos.x, pos.y);
-        });
-        canvas.addEventListener("touchmove", (e) => {
-          if (!drawing) return;
-          const pos = getPos(e);
-          ctx.lineTo(pos.x, pos.y);
-          ctx.stroke();
-          updateTexture();
-        });
-        canvas.addEventListener("touchend", () => (drawing = false));
-
-        // Erstes Laden
-        updateTexture();
+        ctx.fillStyle = "black";
+        ctx.font = "bold 200px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(i + 1, canvas.width / 2, canvas.height / 2);
+        // Update Bildquelle
+        texImgs[i].src = canvas.toDataURL();
       });
 
-      // Pfeiltasten-Steuerung für Rotation
-      document.addEventListener("keydown", (e) => {
-        if (e.key === "ArrowLeft") {
-          rotationY -= 90;
-        } else if (e.key === "ArrowRight") {
-          rotationY += 90;
+      // Nur aktiven Canvas anzeigen
+      function showActiveCanvas(index) {
+        canvases.forEach((c, i) => {
+          c.style.display = i === index ? "block" : "none";
+        });
+        activeCanvasIndex = index;
+      }
+
+      showActiveCanvas(0);
+
+      // Touch-Mal-Funktion auf aktivem Canvas
+      let drawing = false;
+      let lastPos = null;
+
+      function getTouchPos(canvas, e) {
+        const rect = canvas.getBoundingClientRect();
+        if (e.touches) {
+          return {
+            x: e.touches[0].clientX - rect.left,
+            y: e.touches[0].clientY - rect.top,
+          };
+        } else {
+          return {
+            x: e.clientX - rect.left,
+            y: e.clientY - rect.top,
+          };
         }
-        cube.setAttribute("rotation", `0 ${rotationY} 0`);
+      }
+
+      function startDrawing(e) {
+        drawing = true;
+        lastPos = getTouchPos(canvases[activeCanvasIndex], e);
+      }
+      function draw(e) {
+        if (!drawing) return;
+        e.preventDefault();
+        const ctx = canvases[activeCanvasIndex].getContext("2d");
+        const pos = getTouchPos(canvases[activeCanvasIndex], e);
+        ctx.strokeStyle = "black";
+        ctx.lineWidth = 5;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(lastPos.x, lastPos.y);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+        lastPos = pos;
+        // Update Textur des Würfels
+        texImgs[activeCanvasIndex].src = canvases[activeCanvasIndex].toDataURL();
+      }
+      function stopDrawing() {
+        drawing = false;
+        lastPos = null;
+      }
+
+      canvases.forEach((canvas) => {
+        canvas.addEventListener("touchstart", startDrawing);
+        canvas.addEventListener("touchmove", draw);
+        canvas.addEventListener("touchend", stopDrawing);
+        canvas.addEventListener("touchcancel", stopDrawing);
+        canvas.addEventListener("mousedown", startDrawing);
+        canvas.addEventListener("mousemove", draw);
+        canvas.addEventListener("mouseup", stopDrawing);
+        canvas.addEventListener("mouseleave", stopDrawing);
       });
 
-      // Standardmäßig erstes Canvas einblenden
-      canvases[0].style.display = "block";
-
+      // Touch-Drehung Würfel
       let isDragging = false;
-let previousX = 0;
-let previousY = 0;
+      let lastX = 0;
+      let lastY = 0;
+      let rotation = { x: 0, y: 0, z: 0 };
 
-cube.addEventListener('touchstart', (e) => {
-  isDragging = true;
-  previousX = e.touches[0].clientX;
-  previousY = e.touches[0].clientY;
-});
+      cube.addEventListener("touchstart", (e) => {
+        e.preventDefault();
+        isDragging = true;
+        lastX = e.touches[0].clientX;
+        lastY = e.touches[0].clientY;
+      });
 
-cube.addEventListener('touchmove', (e) => {
-  if (!isDragging) return;
-  const deltaX = e.touches[0].clientX - previousX;
-  const deltaY = e.touches[0].clientY - previousY;
+      cube.addEventListener("touchmove", (e) => {
+        e.preventDefault();
+        if (!isDragging) return;
+        let deltaX = e.touches[0].clientX - lastX;
+        let deltaY = e.touches[0].clientY - lastY;
+        lastX = e.touches[0].clientX;
+        lastY = e.touches[0].clientY;
 
-  previousX = e.touches[0].clientX;
-  previousY = e.touches[0].clientY;
+        rotation.x += deltaY * 0.5;
+        rotation.y += deltaX * 0.5;
 
-  // Aktuelle Rotation holen
-  let rotation = cube.getAttribute('rotation');
+        cube.setAttribute("rotation", `${rotation.x} ${rotation.y} 0`);
 
-  // Rotation anpassen (y und x tauschen evtl je nach Achsen)
-  rotation.y += deltaX * 0.5;  // Geschwindigkeit anpassen
-  rotation.x += deltaY * 0.5;
+        updateActiveCanvasFromRotation();
+      });
 
-  cube.setAttribute('rotation', rotation);
+      cube.addEventListener("touchend", (e) => {
+        e.preventDefault();
+        isDragging = false;
+      });
 
-  updateActiveCanvas(rotation);
-});
+      // Funktion, die anhand der Rotation bestimmt, welche Seite oben (aktuell) ist,
+      // und entsprechend den passenden Canvas aktiviert.
+      function updateActiveCanvasFromRotation() {
+        // Normiere Winkel auf 0-360
+        const rotX = ((rotation.x % 360) + 360) % 360;
+        const rotY = ((rotation.y % 360) + 360) % 360;
 
-cube.addEventListener('touchend', () => {
-  isDragging = false;
-});
+        // Grobe Heuristik:
+        // Wir nehmen Y-Rotation für die 4 Seiten (front, back, right, left)
+        // und X-Rotation für oben/unten
 
+        // Entscheide Vorderseite (index 0) bei y ~ 0°, rechts (2) bei y ~ 270°, links (3) bei y ~ 90°, hinten (1) bei y ~ 180°
+        // oben (4) wenn rotX zwischen 45° und 135°, unten (5) wenn rotX zwischen 225° und 315°
+
+        let index;
+
+        if (rotX > 45 && rotX < 135) {
+          index = 4; // oben
+        } else if (rotX > 225 && rotX < 315) {
+          index = 5; // unten
+        } else {
+          // Y-Achse Seiten
+          if (rotY < 45 || rotY > 315) index = 0; // vorne
+          else if (rotY >= 45 && rotY < 135) index = 3; // links
+          else if (rotY >= 135 && rotY < 225) index = 1; // hinten
+          else index = 2; // rechts
+        }
+
+        if (index !== activeCanvasIndex) {
+          showActiveCanvas(index);
+        }
+      }
+
+      // AR Marker detected => Zeige Würfel und aktiven Canvas
+      document.querySelector('a-marker').addEventListener('markerFound', () => {
+        showActiveCanvas(activeCanvasIndex);
+      });
+
+      // Optional: einmal Update auf Start (für Fall Würfel schon sichtbar)
+      updateActiveCanvasFromRotation();
     </script>
   </body>
 </html>
